@@ -47,6 +47,7 @@ import ChangeLogPage from "./Pages/ChangeLog/ChangeLogPage";
 import FAQ from "./Pages/home/FAQ";
 import PostBox from "./Pages/home/PostBox";
 import Locked from "./Pages/Chat/Chat";
+import { AuthCallbackPage } from "./Pages/auth/AuthCallbackPage";
 
 initSuperTokens();
 
@@ -108,6 +109,10 @@ function App() {
                 <Login host={subdomain} />
               </AuthLayout>
             }
+          />
+          <Route
+            path="/login/callback/:providerId"
+            element={<AuthCallbackPage />}
           />
           <Route
             path="/auth"

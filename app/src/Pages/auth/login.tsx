@@ -3,7 +3,8 @@ import Button from "../../components/Button";
 import { SelectField, TextField } from "../../components/Fields";
 import { Link } from "react-router-dom";
 import logo from "../../assets/bob-badge.svg";
-import mlogo from '../../assets/logo-light.svg';
+import mlogo from "../../assets/logo-light.svg";
+import GoogleIcon from "../../assets/icons/google.svg";
 
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -15,6 +16,9 @@ import { emailPasswordSignIn } from "supertokens-web-js/lib/build/recipe/thirdpa
 import { CommunityCollection } from "../../interfaces/interfaces";
 import axios from "axios";
 import { getApiDomain } from "../../lib/auth/supertokens";
+import ThirdPartyEmailPassword, {
+  getAuthorisationURLWithQueryParamsAndSetState,
+} from "supertokens-auth-react/recipe/thirdparty";
 
 interface LoginProps {
   host?: string;
@@ -24,6 +28,7 @@ export default function Login({ host }: LoginProps) {
   const [mode, setMode] = useState<"signin" | "signup" | "forgot_password">(
     "signin",
   );
+  const [thirdPartyLoading, setThirdPartyLoading] = useState<boolean>(false);
 
   const [community, setCommunity] = useState<Partial<CommunityCollection>>();
 
@@ -89,6 +94,36 @@ export default function Login({ host }: LoginProps) {
     }
     // Redirect user to desired page upon successful registration
     // window.location.assign('/feed');
+  };
+  const GENERIC_ERROR = "Something went wrong. Please try again later.";
+
+  const handleThirdPartySignIn = async (providerId: "google") => {
+    setError(null);
+    setThirdPartyLoading(true);
+
+    try {
+      const authUrl = await getAuthorisationURLWithQueryParamsAndSetState({
+        thirdPartyId: "google",
+
+        // This is where Google should redirect the user back after login or error.
+        // This URL goes on the Google's dashboard as well.
+        frontendRedirectURI: `${window.location.origin}/auth/callback/google`,
+      });
+
+      /*
+      Example value of authUrl: https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email&access_type=offline&include_granted_scopes=true&response_type=code&client_id=1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com&state=5a489996a28cafc83ddff&redirect_uri=https%3A%2F%2Fsupertokens.io%2Fdev%2Foauth%2Fredirect-to-app&flowName=GeneralOAuthFlow
+      */
+
+      // we redirect the user to google for auth.
+      window.location.assign(authUrl);
+    } catch (err: any) {
+      if (err.isSuperTokensGeneralError === true) {
+        // this may be a custom error message sent from the API by you.
+        window.alert(err.message);
+      } else {
+        window.alert("Oops! Something went wrong.");
+      }
+    }
   };
 
   return (
@@ -162,6 +197,16 @@ export default function Login({ host }: LoginProps) {
               <span>
                 Sign in <span aria-hidden="true">&rarr;</span>
               </span>
+            </Button>
+
+            <Button
+              size="lg"
+              className="w-full bg-neutral-200 text-neutral-800 hover:bg-neutral-200 hover:text-neutral-700"
+              onClick={() => handleThirdPartySignIn("google")}
+              loading={thirdPartyLoading}
+            >
+              <img src={GoogleIcon} alt="Google Logo" className="mr-3 h-5" />
+              Login with Google
             </Button>
           </div>
           <a className="mt-2 text-sm text-gray-700" href="/auth/reset-password">
