@@ -98,7 +98,7 @@ export default function Login({ host }: LoginProps) {
   const GENERIC_ERROR = "Something went wrong. Please try again later.";
 
   const handleThirdPartySignIn = async (providerId: "google") => {
-    setError(null);
+    //setError(null);
     setThirdPartyLoading(true);
 
     try {
@@ -201,7 +201,7 @@ export default function Login({ host }: LoginProps) {
 
             <Button
               size="lg"
-              className="w-full bg-neutral-200 text-neutral-800 hover:bg-neutral-200 hover:text-neutral-700"
+              className="mt-2 w-full bg-neutral-200 text-neutral-800 hover:bg-neutral-200 hover:text-neutral-700"
               onClick={() => handleThirdPartySignIn("google")}
               loading={thirdPartyLoading}
             >

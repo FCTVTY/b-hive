@@ -33,7 +33,6 @@ import (
 
 	"github.com/chai2010/webp"
 	"github.com/pkg/errors"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
 
 	"github.com/joho/godotenv"
@@ -1364,7 +1363,7 @@ func CreateProfile(rw http.ResponseWriter, r *http.Request) {
 		// No existing profile found, create a new one
 		userID := sessionContainer.GetUserID()
 		// You can learn more about the `User` object over here https://github.com/supertokens/core-driver-interface/wiki
-		id, _ := emailpassword.GetUserByID(sessionContainer.GetUserID())
+		//id, _ := emailpassword.GetUserByID(sessionContainer.GetUserID())
 
 		metadata, err := usermetadata.GetUserMetadata(userID)
 		if err != nil {
@@ -1380,8 +1379,8 @@ func CreateProfile(rw http.ResponseWriter, r *http.Request) {
 			"first_name":     metadata["first_name"],
 			"last_name":      metadata["last_name"],
 			"communities":    v.Communities,
-			"email":          id.Email,
-			"deleted":        false,
+			//"email":          id.Email,
+			"deleted": false,
 		}
 
 		result, err := profileCollection.InsertOne(context.Background(), updateData)

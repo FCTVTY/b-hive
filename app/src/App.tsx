@@ -110,10 +110,7 @@ function App() {
               </AuthLayout>
             }
           />
-          <Route
-            path="/login/callback/:providerId"
-            element={<AuthCallbackPage />}
-          />
+          <Route path="/auth/callback/google" element={<AuthCallbackPage />} />
           <Route
             path="/auth"
             element={
