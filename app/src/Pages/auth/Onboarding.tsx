@@ -13,6 +13,7 @@ function OnboardingPage({ host, channel }: HomeProps) {
   // @ts-ignore
   const [formData, setFormData] = useState<Profile>({
     coverPicture: "https://picsum.photos/1600/600",
+
     first_name: "",
     last_name: "",
     location: "",
