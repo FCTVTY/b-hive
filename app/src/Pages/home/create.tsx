@@ -1,4 +1,10 @@
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import axios from "axios";
 import Button from "../../components/Button";
 import { getApiDomain } from "../../lib/auth/supertokens";
@@ -9,14 +15,16 @@ import ReactQuill from "react-quill";
 import { LoadingButton } from "../../components/LoadingButton"; // will work
 import loadImage from "blueimp-load-image";
 import { json } from "react-router-dom";
-import { Editor } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, SmilePlusIcon } from "lucide-react";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { toast } from "react-toastify";
+import { Editor, RawDraftContentState } from "draft-js";
+import RTEditor from "../../components/Editor/RTEditor";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 
 interface CreateProps {
   onSubmit: () => void;
@@ -187,6 +195,540 @@ export default function Create({ onSubmit, channel, profiles }: CreateProps) {
   function classNames(...classes) {
     return classes.filter(Boolean).join(" ");
   }
+  const editorRef = useRef<Editor>(null);
+  const initialDraft = {
+    blocks: [
+      {
+        key: "foo",
+        text: "My Editor",
+        type: "header-one",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "6p01e",
+        text: "To view this page as a render view, visit here",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [{ offset: 42, length: 4, key: 0 }],
+        data: {},
+      },
+      {
+        key: "alt16",
+        text: "Features:---",
+        type: "header-three",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "bftea",
+        text: "Headings 1-6",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "c08tp",
+        text: "Quote",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "c6tu",
+        text: "Dot list",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "731ff",
+        text: "Num list",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "evq9t",
+        text: "Code blocks",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "84v3i",
+        text: "Inline styling : Bold, Italic, Underline, Monospace",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [
+          { offset: 17, length: 4, style: "BOLD" },
+          { offset: 23, length: 6, style: "ITALIC" },
+          { offset: 42, length: 9, style: "CODE" },
+        ],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "e0nvn",
+        text: "Image & link inserting (url only) into text.",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "90fd9",
+        text: "seperator line",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "44kjq",
+        text: "Examples :---",
+        type: "header-three",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "7agkt",
+        text: "Quote",
+        type: "header-five",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "eqctr",
+        text: "This is a quote",
+        type: "blockquote",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "14oo3",
+        text: "Lists",
+        type: "header-five",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "agd4a",
+        text: "Dot list",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "n40f",
+        text: "Dot list 2",
+        type: "unordered-list-item",
+        depth: 1,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "dudg4",
+        text: "Dot list 3 (max)",
+        type: "unordered-list-item",
+        depth: 2,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "31hkl",
+        text: "there is also num list",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "ogr1",
+        text: "num list",
+        type: "ordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "5b6l6",
+        text: "num list 2",
+        type: "ordered-list-item",
+        depth: 1,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "9962f",
+        text: "num list 3",
+        type: "ordered-list-item",
+        depth: 2,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "20ecj",
+        text: "Code block---",
+        type: "header-five",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "a7qca",
+        text: "the code block is not highlighted in the editor, but can be highlighted when you render it (explanation below).",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "b2ank",
+        text: "//this is a code block",
+        type: "code",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "3s1gi",
+        text: 'console.log("hello world");',
+        type: "code",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "3drq8",
+        text: "for inline code, use monospace",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [{ offset: 17, length: 13, style: "CODE" }],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "3p4nl",
+        text: "Images & links---",
+        type: "header-five",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "4c3sg",
+        text: "To add an image, select text to be an alt and click on the image button.",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "1di14",
+        text: "example",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [{ offset: 0, length: 7, key: 1 }],
+        data: {},
+      },
+      {
+        key: "7uc0q",
+        text: "to insert link, simply paste it, or select a text and click on the link icon, my github",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [{ offset: 78, length: 9, key: 2 }],
+        data: {},
+      },
+      {
+        key: "e20da",
+        text: "there are also undo and redo buttons, alongside some keyboard shortcuts.",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "5vdcf",
+        text: "Tech stack :---",
+        type: "header-three",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "urp9",
+        text: "Next.js",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "b9mjj",
+        text: "Draft.js + Draftjs-to-html",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "em47k",
+        text: "cheerio",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "egcgl",
+        text: "highlight.js",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "d25nl",
+        text: "Shadcn + next themes",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "eramh",
+        text: "Tailwind",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "11mi2",
+        text: "Typescript",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "3c7p3",
+        text: "React icons",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "7ckv",
+        text: "How to use the editor:---",
+        type: "header-three",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "6uffi",
+        text: "make sure to copy the editor file, the editor styles, Shadcn, and initialize theme and css variables. (If you don't want to use shadcn or css variables, you can customize it with some work).",
+        type: "ordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "6sam6",
+        text: "Create a component of which you will render the Editor inside and give it basic styles as width and height.",
+        type: "ordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "t1lg",
+        text: "Create a react ref to forward to the editor and content state to store the content. (optionally) : give the editor initial content in a form of RawDraftContentState, useful for editing existing forms.",
+        type: "ordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [{ offset: 144, length: 20, style: "CODE" }],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "65oeq",
+        text: "When you are done with editing the form, use the getContent function to convert it to html string and save it how you want to.",
+        type: "ordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [{ offset: 49, length: 10, style: "CODE" }],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "cpuvj",
+        text: "when you want to render the html string, use the allPreCodeToHighlighted function on the string, then you can render it as dangerouslySetInnerHTML.",
+        type: "ordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [
+          { offset: 17, length: 7, style: "BOLD" },
+          { offset: 49, length: 23, style: "CODE" },
+          { offset: 123, length: 23, style: "CODE" },
+        ],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "461u2",
+        text: "Notes---",
+        type: "header-three",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "33c63",
+        text: "Unfortunately, this editor will not work well in mobile, because Draft.js mobile pairing is bad (selection problems).",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [{ offset: 0, length: 13, style: "BOLD" }],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "6icjv",
+        text: 'To use the seperator line, simply write "-" three times.',
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [{ offset: 40, length: 3, style: "CODE" }],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "8k5an",
+        text: "Using num list or dot list one after another without anything in between will cause weird behavior in rendering them, so simply seperate them using text or empty row in between.",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {},
+      },
+      {
+        key: "72tkd",
+        text: "I recommend saving a JSON and an HTML versions of the editor if you need to edit it in the future, because as mentioned, you can give initial draft to the editor and it requires the JSON format. you can instead, switch to working with JSON only and convert it to html when rendering the page, but it will be more server heavy.",
+        type: "unordered-list-item",
+        depth: 0,
+        inlineStyleRanges: [{ offset: 0, length: 11, style: "BOLD" }],
+        entityRanges: [],
+        data: {},
+      },
+    ],
+    entityMap: {
+      "0": {
+        type: "LINK",
+        mutability: "MUTABLE",
+        data: { url: "https://lirans-draft-editor.vercel.app/render" },
+      },
+      "1": {
+        type: "IMG",
+        mutability: "MUTABLE",
+        data: {
+          url: "https://i.ibb.co/WBHKj5X/best-text-editors-1024x512.webp",
+        },
+      },
+      "2": {
+        type: "LINK",
+        mutability: "MUTABLE",
+        data: {
+          href: "https://github.com/iLiranS",
+          rel: "noopener noreferrer",
+          target: "_blank",
+          title: "https://github.com/iLiranS",
+          url: "https://github.com/iLiranS",
+        },
+      },
+    },
+  };
+  // updates on each editor change
+  const updateContentHandler = useCallback(
+    (newContent: RawDraftContentState) => {
+      setContent(newContent);
+    },
+    [],
+  );
+
+  // focus issues resolver
+  useEffect(() => {
+    editorRef.current?.focus();
+  }, [content]);
+
+  function onReactionClick(emojiData: EmojiClickData, event: MouseEvent) {
+    const text = contentEditableRef.current.innerHTML;
+    const newText = text + emojiData.emoji;
+    setContent(newText);
+    setPost((prevState) => ({
+      ...prevState,
+      desc: newText,
+    }));
+
+    setTimeout(() => {
+      contentEditableRef.current.innerHTML = newText;
+      placeCaretAtEnd(contentEditableRef.current);
+    }, 0);
+  }
+
   return (
     <>
       <form
@@ -217,9 +759,17 @@ export default function Create({ onSubmit, channel, profiles }: CreateProps) {
           onInput={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="What's on your mind?"
-          className="w-full rounded-lg p-2 text-sm border border-transparent appearance-none rounded-lg placeholder-gray-400 dark:bg-zinc-800 mb-4"
+          className="  w-full rounded-lg p-2 text-sm border border-transparent appearance-none rounded-lg placeholder-gray-400 dark:bg-zinc-800 mb-4"
           style={{ minHeight: "4rem", whiteSpace: "pre-wrap" }}
         ></div>
+        <div className="inline-flex w-full hidden">
+          <RTEditor
+            initialEditorState={initialDraft as RawDraftContentState}
+            ref={editorRef}
+            setContent={updateContentHandler}
+          />
+        </div>
+
         {showSuggestions && (
           <ul className="border border-gray-300 rounded mt-2 bg-white shadow-md max-h-40 overflow-y-auto">
             {filteredSuggestions.map((suggestion, index) => (
@@ -271,7 +821,7 @@ export default function Create({ onSubmit, channel, profiles }: CreateProps) {
                 style={{ display: "none" }}
                 onChange={handleImageChange}
               />
-            </label>
+            </label>{" "}
           </div>
           <div className="inline-flex rounded-md shadow-sm">
             <LoadingButton
@@ -381,7 +931,7 @@ export default function Create({ onSubmit, channel, profiles }: CreateProps) {
         </footer>
       </form>
 
-      <div className="container mx-auto mt-10 hidden">
+      <div className="hidden container mx-auto mt-10 ">
         <h1 className="text-3xl font-bold mb-4">Create a New Post</h1>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">

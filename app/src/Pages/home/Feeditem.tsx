@@ -9,6 +9,7 @@ import { XMarkIcon } from "@heroicons/react/20/solid";
 import axios from "axios";
 import { BadgeCheck, CakeSlice } from "lucide-react";
 import Comment from "./comment";
+import EmojiPicker from "emoji-picker-react";
 
 interface PostItemProps {
   lite?: boolean;
@@ -488,6 +489,13 @@ const PostItem = ({ post, profile, lite, roles, supertokensId, profiles }) => {
                 #{tag}{" "}
               </a>
             ))}
+          </dd>
+          <dd className="mt-0.5 text-sm text-gray-500">
+            <EmojiPicker
+              reactionsDefaultOpen={true}
+              height={25}
+              allowExpandReactions={false}
+            />{" "}
           </dd>
           <a
             className="mt-0.5 text-sm text-gray-500"

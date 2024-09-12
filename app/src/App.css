@@ -81,3 +81,153 @@ html,body,a,p, h1,h2,h3,h4,h5,h6, strong {
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
+
+
+
+@layer components{
+
+    /* RTEdior styles */
+
+
+    .RichEditor-default , .data > p{
+        @apply  text-base leading-relaxed my-2;
+    }
+
+    .RichEditor-blockquote, .data blockquote{
+        @apply text-gray-600/80 dark:text-gray-400/80 bg-gray-400/20 dark:bg-gray-400/10 font-serif italic border-l-[3px] border-gray-400/80 px-1 py-3 pl-2 my-3;
+    }
+    .RichEditor-codeblock ,.data pre{
+        @apply p-2 text-sm overflow-x-auto font-mono;
+    }
+    /* data uses syntax highlight no need for some of editor */
+    .RichEditor-codeblock{
+        @apply text-gray-500 font-mono bg-gray-300 ;
+    }
+    /* render only dark mode code */
+
+
+
+    .RichEditor-codeblock div{
+        @apply whitespace-nowrap;
+    }
+    /* codeblocks rounded corners */
+
+
+
+    /* first in each sequence */
+    .RichEditor-codeblock:has( + .RichEditor-codeblock) , *:not(.RichEditor-codeblock) > .RichEditor-codeblock:first-of-type, *:not(.RichEditor-codeblock) + .RichEditor-codeblock
+    ,.data pre:has(+ pre), .data pre:first-of-type
+    {
+        @apply rounded-t-md;
+    }
+    /* last of each sequence */
+    .RichEditor-codeblock:not(:has(+ .RichEditor-codeblock))
+    , .data pre:not(:has(+ pre))
+    {
+        @apply rounded-b-md shadow-md shadow-black/50;
+    }
+    /* disable rounded in between  */
+    .RichEditor-codeblock + .RichEditor-codeblock:has(+ .RichEditor-codeblock)
+    , .data pre + pre:has(+ pre)
+    {
+        @apply rounded-none;
+    }
+
+    .data p{
+        @apply min-h-[1.625rem];
+    }
+
+    .RichEditor-h1 , .data h1{
+        @apply text-4xl font-bold my-2;
+    }
+    .RichEditor-h2 , .data h2{
+        @apply text-3xl font-bold my-2;
+    }
+    .RichEditor-h3 , .data h3{
+        @apply text-2xl font-bold my-2;
+
+    }
+    .RichEditor-h4 , .data h4{
+        @apply text-xl font-bold my-2;
+
+    }
+    .RichEditor-h5 , .data h5{
+        @apply text-lg font-bold my-2;
+    }
+    .RichEditor-h6 , .data h6{
+        @apply text-base font-bold my-2;
+    }
+
+    .RichEditor-link{
+        @apply underline
+    }
+
+    .data ol{
+        @apply list-inside list-decimal;
+    }
+    /* markers opacity dim */
+    .data ol li::marker, .data ul li::marker, .RichEditor-default::marker, .RichEditor-default::before{
+        @apply text-base;
+    }
+
+    /* for spacing */
+    .data ol li::before{
+        content: counter(li);
+        height: 100%;
+        width: 1rem;
+        opacity: 0;
+    }
+    .data ol li, .data ul li{
+        @apply pt-1;
+    }
+
+    .data ol  ol{
+        @apply ml-7;
+    }
+    /* LISTS STYLES */
+    .data ul > ul{
+        list-style-type:circle;
+        list-style-position: inside;
+        margin-left: 1.75rem;
+    }
+    .data ul > ul > ul{
+        list-style-type: square;
+    }
+    .data ol > ol{
+        list-style-type:lower-alpha;
+    }
+    .data ol > ol > ol{
+        list-style-type:lower-roman;
+    }
+
+    .data ul{
+        @apply list-inside list-disc
+    }
+    .data a , .a_link{
+        @apply underline  text-violet-500 cursor-pointer;
+    }
+    .data *:not(pre){ /* pre should be without space for background consistancy */
+        @apply my-2;
+    }
+    .RTEImageContainer{
+        @apply my-3;
+    }
+    .maxHeightSize{
+        @apply max-h-[500px]
+    }
+    /* data image pos fix */
+    .data img{
+        @apply mx-auto;
+    }
+
+
+
+
+
+
+}
+.DraftEditor-root *, #RTEditor, #RTEditor * {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+
+}
