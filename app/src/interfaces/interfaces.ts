@@ -70,6 +70,8 @@ export interface Post {
   visability: boolean;
   desc: string;
   taggedUsers: Profile[];
+  repost: string;
+  profile: Profile;
 }
 export interface PostComment {
   _id: string;
@@ -79,6 +81,7 @@ export interface PostComment {
   Profile: Profile;
 }
 export interface PPosts {
+  repost: any;
   postComments: PostComment[];
   _id: string;
   channel: string;

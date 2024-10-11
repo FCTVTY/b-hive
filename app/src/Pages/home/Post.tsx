@@ -23,6 +23,7 @@ import YouTubeEmbed from "./youtube";
 import { BadgeCheck } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import LinkPreview from "../../components/LinkPreview";
+import PostItemRepost from "./FeeditemRepost";
 
 interface HomeProps {
   host?: string;
@@ -35,6 +36,8 @@ function classNames(...classes: any[]) {
 
 export default function PostView({ host, channel, post }: HomeProps) {
   const [ppost, setPost] = useState<PPosts>();
+  const [rppost, setRPost] = useState<PPosts>();
+
   const [postLikes, setPostLikes] = useState<PostLike[]>();
   const [profile, setProfile] = useState<Profile>();
   const [community, setCommunity] = useState<Partial<CommunityCollection>>();
@@ -113,6 +116,15 @@ export default function PostView({ host, channel, post }: HomeProps) {
       );
       const postData = await response.json();
       setPost(postData);
+
+      if (postData.repost != null) {
+        const rresponse = await fetch(
+          `${getApiDomain()}/community/post?oid=${postData.repost}`,
+        );
+        const rpostData = await rresponse.json();
+        setRPost(rpostData);
+      }
+
       setPostLikes(postData.postLikes);
 
       const ads = await fetch(`${getApiDomain()}/data/get`);
@@ -216,7 +228,18 @@ export default function PostView({ host, channel, post }: HomeProps) {
                             )}
                           </>
                         )}
-
+                        {ppost.repost && (
+                          <div className="mt-2">
+                            <PostItemRepost
+                              post={rppost}
+                              profile={profile}
+                              lite={undefined}
+                              roles={undefined}
+                              supertokensId={undefined}
+                              profiles={undefined}
+                            />
+                          </div>
+                        )}
                         <dd className="mt-2">
                           {ppost.tags.map((tag) => (
                             <a

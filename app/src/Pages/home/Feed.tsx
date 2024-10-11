@@ -373,18 +373,26 @@ export default function Feed({ host, channel, roles, setRoles }: HomeProps) {
                 {!skelloading &&
                   posts
                     .filter((post) => post.type !== "event")
-                    .map((post) => (
-                      <PostItem
-                        key={post._id}
-                        post={post}
-                        profile={profile}
-                        lite={undefined}
-                        roles={roles}
-                        supertokensId={profile?.supertokensId}
-                        profiles={community?.profiles}
-                      />
-                    ))}
+                    .map((post) => {
+                      const repostPost = post.repost
+                        ? posts.find(
+                            (p) => p._id.toString() === post.repost.toString(),
+                          )
+                        : null;
 
+                      return (
+                        <PostItem
+                          key={post._id.toString()}
+                          post={post}
+                          profile={profile}
+                          lite={undefined}
+                          roles={roles}
+                          supertokensId={profile?.supertokensId}
+                          profiles={community?.profiles}
+                          repost={repostPost}
+                        />
+                      );
+                    })}
                 {skelloading && (
                   <div className="flex flex-1 flex-col p-3 relative animate-pulse">
                     <dl className="mt-1 flex flex-grow flex-col justify-between">
