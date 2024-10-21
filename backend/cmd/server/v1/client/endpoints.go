@@ -15,7 +15,6 @@ import (
 	"bhiveserver/models"
 	"bytes"
 	"context"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -26,6 +25,8 @@ import (
 	"image/png"
 	"log"
 	"math"
+	"math/rand"
+
 	"net/http"
 	"net/url"
 	"os"
@@ -1592,8 +1593,62 @@ func Sessioninfo(w http.ResponseWriter, r *http.Request) {
 		w.Write(bytes)
 	}
 }
+func UpdateAdClick(rw http.ResponseWriter, r *http.Request) {
+	// Extract ad ID from the request (this example assumes ad ID is passed as a URL parameter)
+	adID := r.URL.Query().Get("ad_id")
+	if adID == "" {
+		http.Error(rw, "ad_id is required", http.StatusBadRequest)
+		return
+	}
 
-// GetAds handles the HTTP request to retrieve a valid ad from the database
+	// Create a context for the MongoDB operation
+	ctx := r.Context()
+
+	// Find the ad in the database
+	var ad models.Ads
+	oid, _ := primitive.ObjectIDFromHex(adID)
+
+	err := adsCollection.FindOne(ctx, bson.M{"_id": oid}).Decode(&ad)
+	if err != nil {
+		http.Error(rw, "ad not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	// Update the conversion count and calculate the new CTR
+	ad.PerformanceMetrics.Conversions++ // Increment conversions
+	ad.PerformanceMetrics.Impressions++ // Optionally increment impressions if needed
+
+	// Calculate new CTR
+	if ad.PerformanceMetrics.Impressions > 0 {
+		ad.PerformanceMetrics.CTR = float64(ad.PerformanceMetrics.Conversions) / float64(ad.PerformanceMetrics.Impressions) * 100
+	} else {
+		ad.PerformanceMetrics.CTR = 0 // Avoid division by zero
+	}
+
+	// Prepare the update
+	update := bson.M{
+		"$set": bson.M{
+			"performance_metrics.conversions":  ad.PerformanceMetrics.Conversions,
+			"performance_metrics.ctr":          ad.PerformanceMetrics.CTR,
+			"performance_metrics.last_clicked": time.Now(), // Optionally track when the ad was last clicked
+		},
+	}
+
+	// Update the ad in the database
+	if _, err := adsCollection.UpdateOne(ctx, bson.M{"_id": ad.ID}, update); err != nil {
+		http.Error(rw, "failed to update ad: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the updated ad metrics
+	rw.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(rw).Encode(ad); err != nil {
+		http.Error(rw, "failed to encode response: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Printf("Updated Ad ID: %s, New CTR: %.2f%%, New Conversions: %d\n", ad.ID.Hex(), ad.PerformanceMetrics.CTR, ad.PerformanceMetrics.Conversions)
+}
 func GetAds(rw http.ResponseWriter, r *http.Request) {
 	// Retrieve session from request context
 	sessionContainer := session.GetSessionFromRequestContext(r.Context())
@@ -1606,8 +1661,22 @@ func GetAds(rw http.ResponseWriter, r *http.Request) {
 	today := time.Now().Weekday().String()
 	fmt.Printf("Today: %s\n", today)
 
-	// Filter to get active ads scheduled for today
+	var fallback models.Ads
+
+	//getfallback
 	filter := bson.M{
+		"ad_status": "fallback",
+	}
+
+	err := adsCollection.FindOne(ctx, filter).Decode(&fallback)
+	if err != nil {
+		fmt.Printf("Error fetching ads: %v\n", err)
+		http.Error(rw, "failed to fetch ads: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Filter to get active ads scheduled for today
+	filter = bson.M{
 		"ad_status":        "active",
 		"ad_schedule.days": bson.M{"$in": []string{today}},
 	}
@@ -1633,13 +1702,18 @@ func GetAds(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(ads) == 0 {
-		http.Error(rw, "no valid ads found", http.StatusNotFound)
+		rw.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(rw).Encode(fallback); err != nil {
+			http.Error(rw, "failed to encode response: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 
-	var bestAd *models.Ads
+	var eligibleAds []*models.Ads
 	var highestCTR float64
-	newAdThresholdDays := 7 // New ad threshold
+
+	newAdThresholdDays := 7 // New ad threshold in days
 
 	for _, ad := range ads {
 		// Calculate ad age in days
@@ -1651,54 +1725,47 @@ func GetAds(rw http.ResponseWriter, r *http.Request) {
 		for _, view := range ad.PerformanceMetrics.ViewData {
 			totalSpent += view.CPC // Sum up CPC for each view
 		}
-
 		remainingBudget := ad.Budget - totalSpent
 
-		// Calculate CPC
-		var cpc float64
-		if ad.PerformanceMetrics.Impressions > 0 {
-			cpc = totalSpent / float64(ad.PerformanceMetrics.Impressions)
-		} else {
-			cpc = ad.PerformanceMetrics.CPC
-		}
-
-		fmt.Printf("Ad ID: %s, Total Spent Budget: %.2f, Remaining Budget: %.2f\n", ad.ID.Hex(), totalSpent, remainingBudget)
-		fmt.Printf("Ad ID: %s, Remaining Budget: %.2f, Calculated CPC: %.2f, Total Spent: %.2f, Impressions: %d\n",
-			ad.ID.Hex(), remainingBudget, cpc, totalSpent, ad.PerformanceMetrics.Impressions)
-
-		if cpc > remainingBudget {
-			// Skip ads where CPC exceeds remaining budget
-			fmt.Printf("Skipping Ad ID: %s as CPC exceeds remaining budget\n", ad.ID.Hex())
+		// Skip ads with no remaining budget
+		if remainingBudget <= 0 {
+			fmt.Printf("Skipping Ad ID: %s as there is no remaining budget\n", ad.ID.Hex())
 			continue
 		}
 
-		// Debug log for CPC and Budget comparison
-		fmt.Printf("Ad ID: %s, Budget: %.2f, Calculated CPC: %.2f, Ad Status: %s, Impressions: %d, Conversions: %d, Is New Ad: %t\n",
-			ad.ID.Hex(), ad.Budget, cpc, ad.AdStatus, ad.PerformanceMetrics.Impressions, ad.PerformanceMetrics.Conversions, isNewAd)
+		// Handle new ads (no impressions)
+		if isNewAd {
+			eligibleAds = append(eligibleAds, &ad)
+			continue
+		}
 
-		// Check if the ad is eligible to be shown
-		if (cpc <= remainingBudget || isNewAd) && ad.AdStatus == "active" {
-			if ad.PerformanceMetrics.Impressions > 0 {
-				ctr := float64(ad.PerformanceMetrics.Conversions) / float64(ad.PerformanceMetrics.Impressions) * 100
-				if ctr > highestCTR {
-					highestCTR = ctr
-					bestAd = &ad
-					bestAd.CPC = cpc
-					fmt.Println("Setting best ad based on CTR")
-				}
-			} else if isNewAd {
-				bestAd = &ad
-				bestAd.CPC = cpc
-				fmt.Println("Setting new ad as best ad")
+		// If the ad has impressions, calculate its CTR
+		if ad.PerformanceMetrics.Impressions > 0 {
+			ctr := float64(ad.PerformanceMetrics.Conversions) / float64(ad.PerformanceMetrics.Impressions) * 100
+			fmt.Printf("Ad ID: %s, CTR: %.2f%%\n", ad.ID.Hex(), ctr)
+
+			// Compare CTR and update eligible ads
+			if ctr >= highestCTR {
+				highestCTR = ctr
+				eligibleAds = append(eligibleAds, &ad)
+
 			}
 		}
 	}
 
 	// Handle case when no valid ad is found
-	if bestAd == nil {
-		http.Error(rw, "no ads within budget found", http.StatusNotFound)
-		return
+	if len(eligibleAds) == 0 {
+		rw.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(rw).Encode(fallback); err != nil {
+			http.Error(rw, "failed to encode response: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
+
+	// Introduce randomness among eligible ads
+	rand.Seed(time.Now().UnixNano())
+
+	bestAd := eligibleAds[rand.Intn(len(eligibleAds))] // Randomly pick one from eligible ads
 
 	// Record the view with the CPC at the time of view
 	view := models.View{
@@ -1723,7 +1790,10 @@ func GetAds(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "failed to update ad: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// Clear the view data before responding to reduce payload size
 	bestAd.PerformanceMetrics.ViewData = nil
+
 	// Respond with the best ad
 	rw.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(rw).Encode(bestAd); err != nil {

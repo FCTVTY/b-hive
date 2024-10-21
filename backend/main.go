@@ -286,6 +286,10 @@ func main() {
 		if parsedURL.Path == "/v1/data/get" {
 			session.VerifySession(nil, client.GetAds).ServeHTTP(rw, r)
 		}
+		if parsedURL.Path == "/v1/data/UpdateClick" {
+			session.VerifySession(nil, client.UpdateAdClick).ServeHTTP(rw, r)
+		}
+
 		if parsedURL.Path == "/v1/profile" {
 			session.VerifySession(nil, client.GetProfile).ServeHTTP(rw, r)
 		}

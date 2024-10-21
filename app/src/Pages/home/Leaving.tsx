@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { toast } from "react-toastify";
 import { useLocation } from "react-router-dom";
+import axios from "axios";
 
 interface HomeProps {
   host?: string;
@@ -29,13 +30,18 @@ export default function Leaving({ host, channel }: HomeProps) {
   // Extract the query string parameters
   const queryParams = new URLSearchParams(locationu.search);
   const loggedin = queryParams.get("url");
+  const ad = queryParams.get("campaignid");
   useEffect(() => {
     toast("Redirecting to: " + loggedin);
     let a = document.createElement("a");
     a.target = "_blank";
     a.href = loggedin;
+
+    axios.get(`${getApiDomain()}/data/UpdateClick?ad_id=${ad}`);
+
     setTimeout(() => {
       a.click();
+      window.location.assign("/s/");
     }, 2000);
   }, [loggedin]);
 
