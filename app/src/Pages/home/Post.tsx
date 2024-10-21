@@ -488,20 +488,26 @@ export default function PostView({ host, channel, post }: HomeProps) {
                 >
                   <article className="rounded-xl border border-gray-100 bg-white dark:bg-gray-900 dark:border-gray-800 dark:text-white">
                     <div className="flex items-start gap-4 p-4 sm:p-6 lg:p-8">
-                      <a href={post.url} className="block shrink-0">
+                      <Link
+                        to={`/Leaving?url=${post.url}&campaignid=${post.id}`}
+                        className="block shrink-0"
+                      >
                         <img
                           alt=""
                           src={post.logo}
                           className="size-14 rounded-lg object-contain"
                         />
-                      </a>
+                      </Link>
 
                       <div>
                         <h3 className="font-medium sm:text-lg">
-                          <a href={post.url} className="hover:underline">
+                          <Link
+                            to={`/Leaving?url=${post.url}&campaignid=${post.id}`}
+                            className="hover:underline"
+                          >
                             {" "}
                             {post.name}{" "}
-                          </a>
+                          </Link>
                         </h3>
 
                         <p className="line-clamp-2 text-sm text-gray-700">
@@ -514,13 +520,13 @@ export default function PostView({ host, channel, post }: HomeProps) {
                           </span>
 
                           <p className="sm:block sm:text-xs sm:text-gray-900 dark:text-gray-400">
-                            <a
-                              href={post.url}
+                            <Link
+                              to={`/Leaving?url=${post.url}&campaignid=${post.id}`}
                               className="font-medium underline hover:text-gray-700"
                             >
                               {" "}
                               Read More{" "}
-                            </a>
+                            </Link>
                           </p>
                         </div>
                       </div>

@@ -152,6 +152,17 @@ export interface BNotfications {
   channel: string;
   comment: boolean;
 }
+export interface PerformanceMetrics {
+  impressions: number;
+  conversions: number;
+  cpc: number;
+  ctr?: number; // Optional, for tracking click-through rate
+}
+
+export interface AdSchedule {
+  days: string[]; // Days the ad will run, e.g., ["Monday", "Wednesday", "Friday"]
+  times: string[]; // Time slots for ad visibility, e.g., ["09:00-17:00"]
+}
 
 export interface Ads {
   _id: string;
@@ -160,6 +171,12 @@ export interface Ads {
   logo: string;
   name: string;
   url: string;
+  ad_status: "active" | "paused" | "deleted"; // Status of the ad
+  target_audience: string; // Description of the target audience
+  budget: number; // Budget allocated for the ad
+  performance_metrics: PerformanceMetrics; // Metrics related to ad performance
+  ad_schedule?: AdSchedule; // Optional ad scheduling information
+  date_created: string;
 }
 
 export interface Courses {

@@ -62,6 +62,7 @@ import ApplicationLayoutFull from "./layout/applicationLayoutFull";
 import LockPost from "./Pages/home/LockPost";
 import ProfilePage from "./Pages/profile/Profile";
 import { GlobalDebug } from "./lib/global";
+import Leaving from "./Pages/home/Leaving";
 
 initSuperTokens();
 
@@ -94,8 +95,8 @@ function App() {
     console.log(host);
     if (host === "localhost:5173") {
       // setSubDomain("neo-egvzkmsh")
-      setSubDomain("meta");
-      setHost("meta");
+      setSubDomain("sc");
+      setHost("sc");
     }
 
     // Parse the URL
@@ -471,6 +472,16 @@ function App() {
                     <SessionAuth>
                       <ApplicationLayout host={subdomain} channel={channel}>
                         <FAQ host={subdomain} />
+                      </ApplicationLayout>{" "}
+                    </SessionAuth>
+                  }
+                />
+                <Route
+                  path="/Leaving"
+                  element={
+                    <SessionAuth>
+                      <ApplicationLayout host={subdomain} channel={channel}>
+                        <Leaving host={subdomain} />
                       </ApplicationLayout>{" "}
                     </SessionAuth>
                   }

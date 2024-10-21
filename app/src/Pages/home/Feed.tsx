@@ -28,8 +28,9 @@ import {
 } from "@heroicons/react/16/solid";
 import { BadgeCheck, CakeIcon, MessageCircle, ScrollText } from "lucide-react";
 import { cn } from "../../lib/utils/cn";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { usePageTitle } from "../../lib/hooks/usePageTitle";
+import { toast } from "react-toastify";
 
 interface HomeProps {
   host?: string;
@@ -38,7 +39,7 @@ interface HomeProps {
 
 export default function Feed({ host, channel, roles, setRoles }: HomeProps) {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [ads, setAds] = useState<Ads[]>([]);
+  const [ads, setAds] = useState<Ads>();
   const [profile, setProfile] = useState<Profile>();
   const [community, setCommunity] = useState<Partial<CommunityCollection>>();
   const [page, setPage] = useState(1);
@@ -633,88 +634,85 @@ export default function Feed({ host, channel, roles, setRoles }: HomeProps) {
                 <span className="truncate text-base font-medium leading-7 text-slate-400 dark:text-white py-3 mt-4 ml-2">
                   Sponsors
                 </span>
-                {ads &&
-                  ads.length > 0 &&
-                  (() => {
-                    const randomIndex = Math.floor(Math.random() * ads.length);
-                    const randomPost = ads[randomIndex];
-                    if (!randomPost) {
-                      return null; // Return null if randomPost is undefined
-                    }
-                    return [randomPost].map((post) => (
-                      <div
-                        key={post._id}
-                        className="col-span-1 flex flex-col divide-y divide-gray-200  max-w-4xl"
-                      >
-                        <article className="rounded-xl border border-gray-100 bg-white dark:bg-gray-900 dark:border-gray-800 dark:text-white">
-                          <div className="flex items-start gap-4 p-4 sm:p-6 lg:p-8">
-                            <a href={post.url} className="block shrink-0">
-                              <img
-                                alt=""
-                                src={post.logo}
-                                className="size-14 rounded-lg object-contain"
-                              />
-                            </a>
+                {ads && (
+                  <div
+                    key={ads._id}
+                    className="col-span-1 flex flex-col divide-y divide-gray-200  max-w-4xl"
+                  >
+                    <article className="rounded-xl border border-gray-100 bg-white dark:bg-gray-900 dark:border-gray-800 dark:text-white">
+                      <div className="flex items-start gap-4 p-4 sm:p-6 lg:p-8">
+                        <Link
+                          to={`/Leaving?url=${ads.url}&campaignid=${ads.id}`}
+                          className="block shrink-0"
+                        >
+                          <img
+                            alt=""
+                            src={ads.logo}
+                            className="size-14 rounded-lg object-contain"
+                          />
+                        </Link>
 
-                            <div>
-                              <h3 className="font-medium sm:text-lg">
-                                <a href={post.url} className="hover:underline">
-                                  {" "}
-                                  {post.name}{" "}
-                                </a>
-                              </h3>
+                        <div>
+                          <h3 className="font-medium sm:text-lg">
+                            <Link
+                              to={`/Leaving?url=${ads.url}&campaignid=${ads.id}`}
+                              className="hover:underline"
+                            >
+                              {" "}
+                              {ads.name}{" "}
+                            </Link>
+                          </h3>
 
-                              <p className="line-clamp-2 text-sm text-gray-700">
-                                {post.ad}
-                              </p>
+                          <p className="line-clamp-2 text-sm text-gray-700">
+                            {ads.ad}
+                          </p>
 
-                              <div className="mt-2 sm:flex sm:items-center sm:gap-2">
-                                <span
-                                  className="hidden sm:block"
-                                  aria-hidden="true"
-                                >
-                                  &middot;
-                                </span>
+                          <div className="mt-2 sm:flex sm:items-center sm:gap-2">
+                            <span
+                              className="hidden sm:block"
+                              aria-hidden="true"
+                            >
+                              &middot;
+                            </span>
 
-                                <p className="sm:block sm:text-xs sm:text-gray-900 dark:text-gray-400">
-                                  <a
-                                    href={post.url}
-                                    className="font-medium underline hover:text-gray-700"
-                                  >
-                                    {" "}
-                                    Read More{" "}
-                                  </a>
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <strong className="-mb-[2px] -me-[2px] inline-flex items-center gap-1 rounded-ee-xl rounded-ss-xl bg-slate-900 dark:bg-zinc-600 px-3 py-1.5 text-white">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="2"
+                            <p className="sm:block sm:text-xs sm:text-gray-900 dark:text-gray-400">
+                              <Link
+                                to={`/Leaving?url=${ads.url}&campaignid=${ads.id}`}
+                                className="font-medium underline hover:text-gray-700"
                               >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                                />
-                              </svg>
-
-                              <span className="text-[10px] font-medium sm:text-xs">
-                                Sponsor
-                              </span>
-                            </strong>
+                                {" "}
+                                Read More{" "}
+                              </Link>
+                            </p>
                           </div>
-                        </article>
+                        </div>
                       </div>
-                    ));
-                  })()}
+
+                      <div className="flex justify-end">
+                        <strong className="-mb-[2px] -me-[2px] inline-flex items-center gap-1 rounded-ee-xl rounded-ss-xl bg-slate-900 dark:bg-zinc-600 px-3 py-1.5 text-white">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                            />
+                          </svg>
+
+                          <span className="text-[10px] font-medium sm:text-xs">
+                            Sponsor
+                          </span>
+                        </strong>
+                      </div>
+                    </article>
+                  </div>
+                )}
                 <div className="rounded-xl border border-gray-100 bg-white p-3 mt-4 hidden">
                   <h2 className="text-xl">Members</h2>
 

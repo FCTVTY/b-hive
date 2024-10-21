@@ -104,13 +104,49 @@ type BasicProfile struct {
 	LastName       string             `bson:"last_name" json:"last_name"`
 	Communities    []any              `json:"communities"`
 }
+
+// PerformanceMetrics holds performance-related metrics for the ad
+type PerformanceMetrics struct {
+	Impressions int     `bson:"impressions"`
+	Conversions int     `bson:"conversions"`
+	CPC         float64 `json:"cpc,omitempty"`
+	CTR         float64 `json:"ctr,omitempty"` // Optional field for click-through rate
+	ViewData    []View  `bson:"view_data"`     // Slice of View structs
+}
+
+// AdSchedule holds the scheduling information for the ad
+type AdSchedule struct {
+	Days  []string `json:"days"`  // Days the ad will run
+	Times []string `json:"times"` // Time slots for ad visibility
+}
+type AdPerformance struct {
+	Impressions int     `bson:"impressions"`
+	Conversions int     `bson:"conversions"`
+	CPC         float64 `bson:"cpc"` // Current CPC
+	CTR         float64 `bson:"ctr"`
+	ViewData    []View  `bson:"view_data"` // Slice of View structs
+}
+
+type View struct {
+	Timestamp time.Time `bson:"timestamp"`
+	CPC       float64   `bson:"cpc"` // CPC at the time of view
+}
+
+// Ads represents the ad document in MongoDB
 type Ads struct {
-	ID     primitive.ObjectID `bson:"_id" json:"id,omitempty"`
-	Name   string             `json:"name"`
-	Logo   string             `json:"logo"`
-	Ad     string             `json:"ad"`
-	URL    string             `json:"url"`
-	Clicks int                `json:"clicks"`
+	ID                 primitive.ObjectID `bson:"_id" json:"id,omitempty"`
+	Name               string             `json:"name"`
+	Logo               string             `json:"logo"`
+	Ad                 string             `json:"ad"`
+	URL                string             `json:"url"`
+	Clicks             int                `json:"clicks"`
+	AdStatus           string             `bson:"ad_status"`             // e.g., "active", "paused", "deleted"
+	TargetAudience     string             `json:"target_audience"`       // Description of the target audience
+	Budget             float64            `json:"budget"`                // Budget allocated for the ad
+	PerformanceMetrics PerformanceMetrics `bson:"performance_metrics"`   // Metrics related to ad performance
+	AdSchedule         *AdSchedule        `json:"ad_schedule,omitempty"` // Optional ad scheduling information
+	DateCreated        primitive.DateTime `bson:"date_created" json:"date_created,omitempty"`
+	CPC                float64            `bson:"CPC" json:"CPC,omitempty"`
 }
 type PostLike struct {
 	PostID string `json:"postId"`
